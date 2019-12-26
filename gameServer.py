@@ -2,24 +2,31 @@ import socket
 import selectors
 
 class BaseEventHandler:
+	@staticmethod
 	def on_server_start():
 		print("Server started")
 	
+	@staticmethod
 	def on_client_connect(conn):
 		print("Client connection; Address: %s; ID: %s; Game ID: %s" % (conn.addr, conn.id, conn.game.id))
 	
+	@staticmethod
 	def on_client_disconnect(conn):
 		print("Client disconnect; Address: %s; ID: %s; Game ID: %s" % (conn.addr, conn.id, conn.game.id))
 	
+	@staticmethod
 	def on_data(conn):
-		print("Data received; Client ID: %s; symbol: %s\n  Header: %s\n  Data: %s" % (conn.id, conn.symbol, header, data))
+		print("Data ready to be received; Client ID: %s" % conn.id)
 	
+	@staticmethod
 	def on_game_create(game1):
 		print("Game created; ID: %s; All game Ids: %s" % (game1.id, tuple(i.id for i in game1.server.games)))
 	
+	@staticmethod
 	def on_game_start(game1):
 		print("Game started; ID: %s" % game1.id)
 	
+	@staticmethod
 	def on_game_close(game1):
 		print("Game closed; ID: %s; All game Ids: %s" % (game1.id, tuple(i.id for i in game1.server.games)))
 
@@ -85,7 +92,7 @@ class Game:
 				self.started = True
 				self.server.eventHandlerClass.on_game_start(self) #run event
 		else:
-			raise
+			raise Exception("player added to started game")
 	
 	def removePlayer(self, conn):
 		self.players.remove(conn)
@@ -167,12 +174,12 @@ class Server:
 	def unregisterGame(self, game1):
 		self.games.remove(game1)
 	
-	def getConn(connId):
+	def getConn(self, connId):
 		for i in self.conns:
 			if i.id == connId:
 				return i
 	
-	def getGame(gameId):
+	def getGame(self, gameId):
 		for i in self.games:
 			if i.id == gameId:
 				return i
