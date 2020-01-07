@@ -8,32 +8,32 @@ class BaseEventHandler:
 	
 	@staticmethod
 	def on_client_connect(conn):
-		print("Client connection; Address: %s; ID: %s; Game ID: %s" % (conn.addr, conn.id, conn.game.id))
+		print(f"Client connection; Address: {conn.addr}; ID: {conn.id}; Game ID: {conn.game.id}")
 	
 	@staticmethod
 	def on_client_disconnect(conn):
-		print("Client disconnect; Address: %s; ID: %s; Game ID: %s" % (conn.addr, conn.id, conn.game.id))
+		print(f"Client disconnect; Address: {conn.addr}; ID: {conn.id}; Game ID: {conn.game.id}")
 	
 	@staticmethod
 	def on_data(conn):
-		print("Data ready to be received; Client ID: %s" % conn.id)
+		print(f"Data ready to be received; Client ID: {conn.id}")
 	
 	@staticmethod
-	def on_game_create(game1):
-		print("Game created; ID: %s; All game Ids: %s" % (game1.id, tuple(i.id for i in game1.server.games)))
+	def on_game_create(game):
+		print(f"Game created; ID: {game.id}; All game Ids: {game.server.getAllGameIds()}")
 	
 	@staticmethod
-	def on_game_start(game1):
-		print("Game started; ID: %s" % game1.id)
+	def on_game_start(game):
+		print(f"Game started; ID: {game.id}")
 	
 	@staticmethod
-	def on_game_close(game1):
-		print("Game closed; ID: %s; All game Ids: %s" % (game1.id, tuple(i.id for i in game1.server.games)))
+	def on_game_close(game):
+		print(f"Game closed; ID: {game.id}; All game Ids: {game.server.getAllGameIds()}")
 
 class Connection:
-	def __init__(self, socket1, server1):
+	def __init__(self, socket1, server):
 		self.socket = socket1
-		self.server = server1
+		self.server = server
 		self.addr = self.socket.getpeername()
 		self.closed = False
 		self.id = None
@@ -52,10 +52,10 @@ class Connection:
 			self.socket.close()
 	
 	def autoJoinGame(self):
-		for game1 in self.server.games:
-			if not game1.started:
-				game1.addPlayer(self)
-				self.game = game1
+		for game in self.server.games:
+			if not game.started:
+				game.addPlayer(self)
+				self.game = game
 				return
 		
 		newGame = self.server.gameClass(self.server)
@@ -66,8 +66,8 @@ class Connection:
 		return self.socket.fileno()
 
 class Game:
-	def __init__(self, server1):
-		self.server = server1
+	def __init__(self, server):
+		self.server = server
 		self.players = []
 		self.started = False
 		self.closed = False
@@ -166,23 +166,29 @@ class Server:
 		self.selector.unregister(conn)
 		self.conns.remove(conn)
 	
-	def registerGame(self, game1):
-		game1.id = self.gameIdCounter
-		self.games += [game1]
+	def registerGame(self, game):
+		game.id = self.gameIdCounter
+		self.games += [game]
 		self.gameIdCounter += 1
 	
-	def unregisterGame(self, game1):
-		self.games.remove(game1)
+	def unregisterGame(self, game):
+		self.games.remove(game)
 	
 	def getConn(self, connId):
-		for i in self.conns:
-			if i.id == connId:
-				return i
+		for conn in self.conns:
+			if conn.id == connId:
+				return conn
 	
 	def getGame(self, gameId):
-		for i in self.games:
-			if i.id == gameId:
-				return i
+		for game in self.games:
+			if game.id == gameId:
+				return game
+	
+	def getAllConnIds(self):
+		return tuple(game.id for game in self.conns)
+
+	def getAllGameIds(self):
+		return tuple(game.id for game in self.games)
 	
 	def acceptConn(self, socket1, mask):
 		socket2, addr = socket1.accept()

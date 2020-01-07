@@ -123,6 +123,10 @@ def clearConsole():
 		clearCommand = "cls"
 	os.system(clearCommand)
 
-t3client = Client(("127.0.0.1", 5000))
-#t3client = Client(("ec2-52-32-53-78.us-west-2.compute.amazonaws.com", 5000))
-t3client.start()
+def main():
+	t3client = Client(("127.0.0.1", 5000))
+	#t3client = Client(("ec2-52-32-53-78.us-west-2.compute.amazonaws.com", 5000))
+	t3client.start()
+
+if __name__ == "__main__":
+	main()
