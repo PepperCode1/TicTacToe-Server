@@ -14,26 +14,29 @@ class cEventHandler(BaseEventHandler):
 			raise NoData
 		
 		print(f"Data received; Client ID: {conn.id}; symbol: {conn.symbol}\n  Header: {header}\n  Data: {data}")
+
+		game = conn.game
 		dataId = header[0]
 		if dataId == 2: #receive data id 2
-			if conn.game.prevPlayer != conn.symbol and conn.game.checkSpace(*data): #checks: if different player and valid space
-				conn.game.sendAll(packer.pack(header, data), exceptFor=(conn,)) #send data id 2: board space
+			if game.prevPlayer != conn.symbol and game.checkSpace(*data): #if different player and valid space
+				game.sendAll(packer.pack(header, data), exceptFor=(conn,)) #send data id 2: board space
 				
-				conn.game.curPlayer = conn.symbol
-				conn.game.board[data[0]][data[1]] = conn.game.curPlayer #insert space into board
-				conn.game.rounds += 1
+				game.curPlayer = conn.symbol
+				game.board[data[0]][data[1]] = game.curPlayer #insert space into board
+				game.rounds += 1
 				
-				if conn.game.rounds >= conn.game.boardSize**2: #tie
-					conn.game.sendAll(packer.pack((3,), (False,))) #send data id 4: no next round
-					conn.game.sendAll(packer.pack((4,), (b"0",))) #send data id 5: tie
-				else: #no tie
-					win = conn.game.checkBoard(*data)
-					if win: #win
-						conn.game.sendAll(packer.pack((3,), (False,))) #send data id 4: no next round
-						conn.game.sendAll(packer.pack((4,), (bytes(conn.symbol,"utf8"),))) #send data id 5: win
-					else: #no win
-						conn.game.sendAll(packer.pack((3,), (True,))) #send data id 4: start next round
-				conn.game.prevPlayer = conn.game.curPlayer
+				win = game.checkBoard(*data)
+				if win: #win
+					game.sendAll(packer.pack((3,), (False,))) #send data id 3: no next round
+					game.sendAll(packer.pack((4,), (bytes(conn.symbol,"utf8"),))) #send data id 4: win
+				else: #no win
+					if game.rounds >= game.boardSize**2: #tie
+						game.sendAll(packer.pack((3,), (False,))) #send data id 3: no next round
+						game.sendAll(packer.pack((4,), (b"0",))) #send data id 4: tie
+					else: #no tie
+						game.sendAll(packer.pack((3,), (True,))) #send data id 3: start next round
+						
+				game.prevPlayer = game.curPlayer
 	
 	@staticmethod
 	def on_game_start(game):

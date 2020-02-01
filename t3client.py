@@ -84,14 +84,14 @@ class Client:
 					header, data = packer.recv(self.sock) #receive data id 2
 				self.curGame.board[data[0]][data[1]] = self.curGame.curPlayer #insert space into board
 			
-			header, data = packer.recv(self.sock) #receive data id 4
+			header, data = packer.recv(self.sock) #receive data id 3
 			nextRound = data[0]
 			if not nextRound:
 				break
 			
 			self.curGame.swapPlayer()
 
-		header, data = packer.recv(self.sock) #receive data id 5
+		header, data = packer.recv(self.sock) #receive data id 4
 		winPlayer = str(data[0], "utf8") #convert bytes to str
 		clearConsole()
 		if winPlayer == "X": #X wins
@@ -125,7 +125,6 @@ def clearConsole():
 
 def main():
 	t3client = Client(("127.0.0.1", 5000))
-	#t3client = Client(("ec2-52-32-53-78.us-west-2.compute.amazonaws.com", 5000))
 	t3client.start()
 
 if __name__ == "__main__":

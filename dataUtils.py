@@ -1,5 +1,4 @@
 import struct
-import json
 
 class DataPacker:
 	def __init__(self, lenFormat, headerFormat):
