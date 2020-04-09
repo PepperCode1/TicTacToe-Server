@@ -9,16 +9,16 @@ import time
 
 class Client:
 	def __init__(self, addr):
+		self.socket = None
 		self.addr = addr
-		self.sock = None
-		self.curGame = None
+		self.game = None
 	
 	def printBoard(self):
-		for i in range(self.curGame.boardSize*2-1):
+		for i in range(self.game.boardSize*2-1):
 			if i%2 == 0:
-				print(str(self.curGame.board[i//2])[1:-1].replace(", ","│").replace("\'\'","   ").replace("\'"," "))
+				print(str(self.game.board[i//2])[1:-1].replace(", ","│").replace("\'\'","   ").replace("\'"," "))
 			else:
-				print(self.curGame.separator)
+				print(self.game.separator)
 	
 	def getValidSpace(self):
 		while True:
@@ -27,7 +27,7 @@ class Client:
 				if space[0] < 0 or space[1] < 0:
 					print("Please enter a valid space.")
 				else:
-					if self.curGame.board[space[0]][space[1]] == "":
+					if self.game.board[space[0]][space[1]] == "":
 						return space
 					else:
 						print("That space is already taken.")
@@ -36,7 +36,7 @@ class Client:
 	
 	def start(self):
 		while True:
-			self.sock = socket.socket()
+			self.socket = socket.socket()
 			clearConsole()
 			try:
 				self.startGame()
@@ -52,17 +52,17 @@ class Client:
 				break
 
 	def startGame(self):
-		self.curGame = Game(3)
+		self.game = Game(3)
 		
 		print("Connecting to server...")
 		with waitingIcon.spinningBar1:
-			self.sock.connect(self.addr) #connect to server
+			self.socket.connect(self.addr) #connect to server
 		print("Waiting for opponent...")
 		with waitingIcon.spinningBar1:
-			packer.recv(self.sock) #receive data id 0: start
+			packer.recv(self.socket) #receive data id 0: start
 		print("Game starting")
 
-		header, data = packer.recv(self.sock) #receive data id 1
+		header, data = packer.recv(self.socket) #receive data id 1
 		symbol = str(data[0], "utf8")
 		print("You are", symbol)
 		time.sleep(2)
@@ -70,28 +70,28 @@ class Client:
 		while True:
 			clearConsole()
 			self.printBoard()
-			if self.curGame.curPlayer == symbol:
+			if self.game.curPlayer == symbol:
 				print("\nYour turn")
 				space = self.getValidSpace() #get valid space from user
-				self.curGame.board[space[0]][space[1]] = self.curGame.curPlayer #insert space into board
+				self.game.board[space[0]][space[1]] = self.game.curPlayer #insert space into board
 				
-				packer.send(self.sock, (2,), space) #send sata id 2: space
+				packer.send(self.socket, (2,), space) #send sata id 2: space
 			else:
 				print("\nOpponent's turn")
 				print("Waiting for opponent to make move...")
 				
 				with waitingIcon.spinningBar1:
-					header, data = packer.recv(self.sock) #receive data id 2
-				self.curGame.board[data[0]][data[1]] = self.curGame.curPlayer #insert space into board
+					header, data = packer.recv(self.socket) #receive data id 2
+				self.game.board[data[0]][data[1]] = self.game.curPlayer #insert space into board
 			
-			header, data = packer.recv(self.sock) #receive data id 3
+			header, data = packer.recv(self.socket) #receive data id 3
 			nextRound = data[0]
 			if not nextRound:
 				break
 			
-			self.curGame.swapPlayer()
+			self.game.swapPlayer()
 
-		header, data = packer.recv(self.sock) #receive data id 4
+		header, data = packer.recv(self.socket) #receive data id 4
 		winPlayer = str(data[0], "utf8") #convert bytes to str
 		clearConsole()
 		if winPlayer == "X": #X wins
@@ -104,7 +104,7 @@ class Client:
 		print("\nFinal board:")
 		self.printBoard()
 		
-		self.sock.close()
+		self.socket.close()
 
 class Game:
 	def __init__(self, boardSize):

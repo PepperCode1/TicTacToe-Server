@@ -6,7 +6,7 @@ class DataPacker:
 		self.headerStruct = struct.Struct(headerFormat)
 		self.dataStructs = {}
 	
-	def pack(self, header, data):
+	def pack(self, header, data=()):
 		data = self.dataStructs[header[0]].pack(*data)
 		header = self.headerStruct.pack(*header)
 		
